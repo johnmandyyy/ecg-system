@@ -1,0 +1,36 @@
+ <div class="modal fade" id="loading_message_modal" data-bs-backdrop="static"
+    data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    [[ info.TITLE ]]
+                </h5>
+
+            </div>
+
+            <div class="modal-body">
+                <div class="text-center">
+                    <div v-if="info.STATE">
+                        {% include 'app/constants/heart_loading.html' %}
+
+                    </div>
+
+                    <p class="lead">
+                        [[ info.MESSAGE ]]
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button :disabled="info.STATE"
+                    @click="closeModal('loading_message_modal')"
+                    type="button"
+                    class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

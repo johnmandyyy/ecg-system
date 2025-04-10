@@ -1,0 +1,31 @@
+<div class="modal fade" id="graph_modal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    [[ info.TITLE ]]
+                </h5>
+
+            </div>
+
+            <div class="modal-body">
+                <div class="row justify-content-center">
+                    <div class="col-lg-12 d-flex justify-content-center">
+                        <div
+                            class="table-responsive d-flex justify-content-center">
+                            <div id="ecg-graph">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button @click="closeModal('graph_modal')" type="button"
+                    class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

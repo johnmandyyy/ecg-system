@@ -1,0 +1,388 @@
+{% extends "app/layout.html" %}
+{% load static %}
+{% block content %}
+
+<div id="{{ obj_name }}">
+    {% include 'app/constants/universal_loading_modal.html' %}
+    <div class="row">
+
+        <div class="col-lg-12">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="display-6 fw-bold">
+                        <i class="fa-solid fa-brain-circuit"></i> Patients
+                    </h1>
+
+                    <p class="lead fw-bold text-muted">
+                        Read ECG Data from patients using Arduino and AD8232
+                        Sensor
+                    </p>
+
+                    <p class="lead fw-bold">
+                        Cardiologist: {{ request.user.first_name }}
+                        {{ request.user.last_name }}
+                    </p>
+
+                    <label class="label mb-2">Available Ports: *</label>
+
+                    <select v-if="lists.PORTS" class="form-control mb-3">
+                        <option v-for="port in lists.PORTS.available_ports">
+                            [[ port ]]
+                        </option>
+                    </select>
+
+                    <button class="btn btn-primary w-100 mb-2"
+                        @click="plotJS()">Read
+                        ECG
+                        Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-lg-4">
+                    <label class="label mb-2">First Name:</label>
+                    <input
+                        type="text"
+                        v-model="props.PATIENT.first_name"
+                        class="form-control mb-2"
+                        :disabled="state.SELECTED_PATIENT" />
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="label mb-2">Middle Name:</label>
+                    <input
+                        type="text"
+                        v-model="props.PATIENT.middle_name"
+                        class="form-control mb-2"
+                        :disabled="state.SELECTED_PATIENT" />
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="label mb-2">Last Name:</label>
+                    <input
+                        type="text"
+                        v-model="props.PATIENT.last_name"
+                        class="form-control mb-2"
+                        :disabled="state.SELECTED_PATIENT" />
+                </div>
+
+            </div>
+
+            <div class="col-lg-12">
+                <button class="btn btn-primary mb-2 mt-2"
+                    @click="filterPatient()">
+                    Search Patient(s) <i
+                        class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button class="btn btn-danger mb-2 mt-2"
+                    @click="clearFilters()">
+                    Clear Filters <i class="fa-solid fa-trash"></i>
+                </button>
+
+            </div>
+
+            <div class="col-lg-12">
+                <hr class="my-4" />
+            </div>
+
+            <div class="table-responsive">
+                <div id="ecg-graph" style="width:100%;">
+
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <div v-if="loading_state.PATIENT">
+                                {% include 'app/constants/loading.html' %}
+                            </div>
+                            <div v-else>
+                                <table class="table" v-if="lists.PATIENT">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Patient ID #</th>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Action(s)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="patient in lists.PATIENT.results">
+                                            <th scope="row">[[ patient.id
+                                                ]]</th>
+                                            <td>
+                                                [[ patient.first_name ]] [[
+                                                patient.middle_name ]] [[
+                                                patient.last_name ]]
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class="btn btn-warning"
+                                                    @click="selectPatient(patient)">
+                                                    Select Patient <i
+                                                        class="fa-solid fa-eye">
+                                                    </i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Navigation Buttons -->
+                        <div v-if="lists.PATIENT"
+                            class="d-flex justify-content-end mt-2">
+                            <button
+                                class="btn btn-primary me-2"
+                                :disabled="lists.PATIENT.previous === null"
+                                @click="switchPage('PREVIOUS')">
+                                <i class="fa-solid fa-left"></i> Previous
+                            </button>
+                            <button
+                                class="btn btn-primary me-2"
+                                :disabled="lists.PATIENT.next === null"
+                                @click="switchPage('NEXT')">
+                                Next <i class="fa-solid fa-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+new Vue({
+    delimiters: ["[[", "]]"],
+    el: "#" + '{{ obj_name }}',
+    data: {
+        loading_state: {},
+        lists: {},
+        url_models: {},
+        endpoints: {},
+
+        info: {
+            'MESSAGE': '',
+            'TITLE': 'Sample Title'
+        },
+
+        props: {
+            PATIENT: {
+                id: "",
+                first_name: "",
+                middle_name: "",
+                last_name: "",
+                birth: "",
+            },
+            PREDICTION: {
+                "id": ""
+            }
+        },
+
+        state: {
+            
+            SELECTED_PATIENT: false,
+            SELECTED_FILE: null,
+        }
+
+    },
+    mounted() {
+        if (document.querySelector("#" + '{{ obj_name }}')) {
+            console.log("Mounted " + '{{ obj_name }}' + " page.")
+        }
+
+        initializeModels(this, ["PATIENT"]);
+        universalGet(this, "LIST_GET", "PATIENT", "PATIENT", "PATIENT", {
+            page: 1,
+        });
+
+        this.getPorts()
+        Vue.set(this.lists, 'PORTS', [])
+        Vue.set(this.info, 'STATE', false)
+        Vue.set(this.props, 'PREDICTION', {})
+    },
+    methods: {
+
+        async selectPatient(prop) {
+            this.props.PATIENT = prop;
+            await universalGet(
+            this,
+            "LIST_GET",
+            "PATIENT",
+            "PATIENT",
+            "PATIENT",
+            this.getFilters()
+            );
+
+            this.state.SELECTED_PATIENT = true;
+        },
+
+        async clearFilters() {
+            this.info.TITLE = ''
+            this.info.MESSAGE = ''
+            this.props.PREDICTION = {
+                "id": ""
+            }
+            this.props.PATIENT = {
+            id: "",
+            first_name: "",
+            middle_name: "",
+            last_name: "",
+            birth: "",
+            };
+            await universalGet(
+            this,
+            "LIST_GET",
+            "PATIENT",
+            "PATIENT",
+            "PATIENT",
+            this.getFilters()
+            );
+            this.state.SELECTED_PATIENT = false;
+        },
+
+        async switchPage(option) {
+            var action = "";
+
+            if (option === "NEXT") {
+            action = this.lists.PATIENT.next;
+            } else if (option === "PREVIOUS") {
+            action = ensurePageParam(this.lists.PATIENT.previous);
+            }
+
+            await universalGet(
+            this,
+            "LIST_GET",
+            "PATIENT",
+            "PATIENT",
+            "PATIENT",
+            null,
+            action
+            );
+        },
+
+        async filterPatient() {
+            this.state.SELECTED_PATIENT = false;
+            await universalGet(
+            this,
+            "LIST_GET",
+            "PATIENT",
+            "PATIENT",
+            "PATIENT",
+            this.getFilters()
+            );
+            if (this.lists.PATIENT) {
+            if (this.lists.PATIENT.count < 1) {
+                this.info.MESSAGE = "Oh no! No results found.";
+                this.info.TITLE = "Notification";
+                openModal("message_modal");
+                this.clearFilters();
+            }
+            }
+        },
+
+        getFilters() {
+            const filters = { page: 1 };
+
+            if (this.props.PATIENT.first_name !== "") {
+            filters["first_name"] = this.props.PATIENT.first_name;
+            }
+
+            if (
+            this.props.PATIENT.middle_name !== "" &&
+            this.props.PATIENT.middle_name !== null
+            ) {
+            filters["middle_name"] = this.props.PATIENT.middle_name;
+            }
+
+            if (this.props.PATIENT.last_name !== "") {
+            filters["last_name"] = this.props.PATIENT.last_name;
+            }
+
+            console.log(filters);
+            return filters;
+        },
+
+        async predictECGData(rates) {
+            axios.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken')
+            let response = await axios.patch('/api/serial-ports/', {"rates": rates, "prediction_id": this.props.PREDICTION.id});
+            return response
+        },
+
+        async getPorts() {
+
+            try {
+                const url = '/api/serial-ports/'
+                const result = await axios.get(url)
+                if (result) {
+                    Vue.set(this.lists, 'PORTS', result.data)
+                }
+            } catch (error) {}
+
+        },
+        async plotJS() {
+            try {
+
+                this.info.STATE = true
+                this.info.TITLE = 'Notification'
+                this.info.MESSAGE = 'Reading ECG Data'
+                openModal('loading_message_modal')
+
+
+                axios.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken')
+
+                const payload = {
+                    "port": "COM6",
+                    "patient": this.props.PATIENT.id
+                }
+
+                let response = await axios.post('/api/serial-ports/', payload);
+                let data = response.data;
+
+                this.props.PREDICTION.id = response.data.prediction_id
+
+                let xValues = [...Array(data.rates.length).keys()];
+                let yValues = data.rates;
+                
+                this.info.MESSAGE = 'Predicting Fetched Data using GRU'
+                const prediction = await this.predictECGData(data.rates)
+        
+                if (prediction) {
+                    this.info.MESSAGE = prediction.data.message
+                }
+
+                let trace = {
+                    x: xValues,
+                    y: yValues,
+                    mode: 'lines',
+                    line: { color: 'blue' }
+                };
+
+                let layout = {
+                    title: 'ECG-Style Graph',
+                    xaxis: { title: 'Time' },
+                    yaxis: { title: 'Amplitude' }
+                };
+
+                Plotly.newPlot('ecg-graph', [trace], layout);
+            } catch (error) {
+                console.error("Error fetching ECG data:", error);
+            }
+
+            this.info.STATE = false
+            this.info.TITLE = 'Notification'
+            
+        }
+    },
+});
+</script>
+{% endblock %}

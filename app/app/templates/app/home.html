@@ -1,0 +1,59 @@
+{% extends "app/layout.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div id="{{ obj_name }}">
+
+    <div class="row">
+        [[ lists ]]
+    </div>
+
+</div>
+
+<script>
+
+new Vue({
+    
+    delimiters: ["[[", "]]"],
+    el: "#" + '{{ obj_name }}',
+    
+    data: {
+
+        loading_state: {},
+        lists: {},
+        url_models: {},
+        endpoints: {},
+
+        info: {
+            'MESSAGE': '',
+            'TITLE': 'Sample Title'
+        },
+
+        props: {},
+        state: {}
+    },
+
+    mounted() {
+        
+        if (document.querySelector("#" + '{{ obj_name }}')) {
+            console.log("Mounted " + '{{ obj_name }}' + " page.")
+        }
+
+        initializeModels(this, ['USER'])
+        universalGet(this,
+            'LIST_GET',
+            'USER',
+            'USER',
+            'USER',
+            {}, ''
+        )
+
+    },
+
+    methods: {},
+});
+
+</script>
+
+{% endblock %}

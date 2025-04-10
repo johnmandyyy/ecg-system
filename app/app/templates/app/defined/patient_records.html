@@ -1,0 +1,89 @@
+<div class="modal fade" id="patient_records_modal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Patient Result(s)
+                </h5>
+
+            </div>
+
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <div v-if="loading_state.PREDICTION">
+                        {% include 'app/constants/loading.html' %}
+                    </div>
+                    <div v-else>
+                        <div
+                            v-if="lists.PREDICTION && lists.PREDICTION.count > 0">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Result Reference ID #
+                                        </th>
+                                        <th scope="col">Remarks
+                                        </th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="prediction in lists.PREDICTION.results">
+                                        <th scope="row">
+                                            [[ prediction.id ]]
+                                        </th>
+
+                                        <td>
+                                            [[ prediction.remarks ]]
+                                        </td>
+
+                                        <td>
+                                            <button class="btn btn-info"
+                                                @click="viewGraph(prediction)">
+                                                View
+                                                Graph </button>
+                                        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else>
+                            {% include 'app/constants/nodata.html' %}
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <!-- Navigation Buttons -->
+                <div v-if="lists.PREDICTION"
+                    class="d-flex justify-content-end mt-2">
+                    <button
+                        class="btn btn-primary me-2"
+                        :disabled="lists.PREDICTION.previous === null"
+                        @click="switchPage('PREVIOUS')">
+                        <i class="fa-solid fa-left"></i>
+                        Previous
+                    </button>
+                    <button
+                        class="btn btn-primary me-2"
+                        :disabled="lists.PREDICTION.next === null"
+                        @click="switchPage('NEXT')">
+                        Next <i class="fa-solid fa-right"></i>
+                    </button>
+
+                    <button @click="closeModal('patient_records_modal')"
+                        type="button"
+                        class="btn btn-primary me-2">Close</button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
