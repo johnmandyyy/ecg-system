@@ -26,7 +26,8 @@
 
                     <label class="label mb-2">Available Ports: *</label>
 
-                    <select v-if="lists.PORTS" class="form-control mb-3">
+                    <select v-if="lists.PORTS" class="form-control mb-3"
+                        v-model="selected_port">
                         <option v-for="port in lists.PORTS.available_ports">
                             [[ port ]]
                         </option>
@@ -165,6 +166,7 @@ new Vue({
     delimiters: ["[[", "]]"],
     el: "#" + '{{ obj_name }}',
     data: {
+        selected_port: '',
         loading_state: {},
         lists: {},
         url_models: {},
@@ -341,7 +343,7 @@ new Vue({
                 axios.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken')
 
                 const payload = {
-                    "port": "COM5",
+                    "port": this.selected_port,
                     "patient": this.props.PATIENT.id
                 }
 
