@@ -19,7 +19,6 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "channels",
-    "daphne",
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_yasg",

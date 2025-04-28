@@ -56,7 +56,7 @@ class GatedRecurrentUnit:
                 test_data = np.reshape(test_data, (1, 3000,1))
                 prediction = model.predict(test_data)
                 label = "Arrhythmia" if prediction[0][0] > 0.5 else "Normal"
-                TestingJsonDataset.objects.filter(id = data.pk).update(answered_remarks = label)
+                TestingJsonDataset.objects.all().filter(id = data.pk).update(answered_remarks = label)
 
 
     def save_test_data_to_orm(self, x_test, y_test):

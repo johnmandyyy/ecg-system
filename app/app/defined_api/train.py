@@ -10,6 +10,7 @@ class Training(APIView):
 
     def get(self, request):
         self.GRU.algorithm()
+        self.GRU.test_predict()
 
         return Response({
             "message": "Training of dataset was done."

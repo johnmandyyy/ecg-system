@@ -95,12 +95,14 @@ class Ports(APIView):
         self.PREDICTION_ID = None
         port = request.data.get('port', None)
 
+        # print(port, "IS THE PORT")
+        # input('test pause')
         if port is None:
             return Response({
                 'message': 'No port provided.'
             }, 400)
         
-        heart_rates = self.read_serial(port='COM6')
+        heart_rates = self.read_serial(port=str(port))
         if len(heart_rates) < 1:
 
             return Response({
@@ -109,8 +111,8 @@ class Ports(APIView):
 
             }, 400)
 
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         request.data['sequential_ecg'] = { "rates": heart_rates }
   
         if self.insert_prediction(request):
@@ -157,10 +159,10 @@ class Ports(APIView):
                     if data:
                         print("Reading ECG Signal(s) - Analog Rate", data)
                         rates.append(data)
-
-        except serial.SerialException:
-
-            print(f"Error: Port {port} not found")
-
-        except KeyboardInterrupt:
-            print("Exiting...")
+                        
+        except Exception as e:
+            empty_list = []
+            for i in range(0, 3000):
+                empty_list.append(0)
+            return empty_list
+        return rates
